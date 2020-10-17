@@ -12,6 +12,7 @@ const {
   join,
   indent,
   dedent,
+  ifBreak,
 } = doc.builders;
 
 const log = (s, n = Infinity) =>
@@ -22,8 +23,12 @@ type PrinterFunc = Printer["print"];
 const printGroq: PrinterFunc = (path, options, print) => {
   const node: SyntaxNode = path.getValue();
 
-  // options.printWidth = 15;
-  log(node);
+  options.printWidth = 20;
+
+  // Print root node
+  // if (path.getName() === null) {
+  // log(node);
+  // }
 
   switch (node.type) {
     case "Projection":
@@ -31,7 +36,7 @@ const printGroq: PrinterFunc = (path, options, print) => {
         concat([
           path.call(print, "base"),
           " ",
-          group(indent(path.call(print, "query"))),
+          group(path.call(print, "query")),
         ])
       );
 
@@ -87,6 +92,21 @@ const printGroq: PrinterFunc = (path, options, print) => {
       return concat(["(", path.call(print, "base"), ")"]);
 
     case "FuncCall":
+      // Workaround for better fromatting of select(Pairs), can be improved
+      if (node.name == "select") {
+        return concat([
+          node.name,
+          "(",
+          indent(
+            concat([
+              softline,
+              join(concat([",", line]), path.map(print, "args")),
+            ])
+          ),
+          softline,
+          ")",
+        ]);
+      }
       return concat([node.name, "(", join(", ", path.map(print, "args")), ")"]);
 
     case "Pair":
@@ -139,16 +159,31 @@ const printGroq: PrinterFunc = (path, options, print) => {
       return concat(["...", path.call(print, "value")]);
 
     case "Object":
-      return concat([
-        "{",
-
+      return group(
         concat([
-          line,
-          indent(join(concat([",", softline]), path.map(print, "attributes"))),
-          line,
-        ]),
+          "{",
+          indent(
+            concat([
+              options.bracketSpacing ? line : softline,
+              join(concat([",", line]), path.map(print, "attributes")),
+            ])
+          ),
+          options.bracketSpacing ? line : softline,
+          "}",
+        ])
+      );
 
-        "}",
+    case "Array":
+      return concat([
+        "[",
+        indent(
+          concat([
+            softline,
+            join(concat([",", line]), path.map(print, "elements")),
+          ])
+        ),
+        softline,
+        "]",
       ]);
 
     case "ObjectAttribute":
@@ -181,21 +216,6 @@ const printGroq: PrinterFunc = (path, options, print) => {
         path.call(print, "index"),
         "]",
       ]);
-
-    case "Array":
-      return group(
-        concat([
-          "[",
-          indent(
-            concat([
-              line,
-              join(concat([",", line]), path.map(print, "elements")),
-            ])
-          ),
-          line,
-          "]",
-        ])
-      );
 
     case "ArrayElement":
       // @TODO: isSplat?
