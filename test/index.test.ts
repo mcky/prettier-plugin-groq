@@ -26,7 +26,7 @@ describe("prettier-plugin-groq", () => {
       expect(format(query)).toEqual(query);
     });
 
-    it("simple one line with array", () => {
+    it("simple one line, array in filter", () => {
       const query = groq`*[foo in [bar]] { one, two }`;
       expect(format(query)).toEqual(query);
     });
@@ -46,13 +46,13 @@ describe("prettier-plugin-groq", () => {
       expect(formatted).toEqual(query);
     });
 
-    it("simple nested", () => {
+    it("simple multiline nested", () => {
       const query = stripIndent(groq`
       *[foo == bar] {
         one,
-        twotwo,
-        two { three },
-        four
+        two,
+        three { four },
+        five
       }
     `);
 
@@ -85,7 +85,7 @@ describe("prettier-plugin-groq", () => {
           expect(outputNoWhitespace).toEqual(expectedNoWhitespace);
         });
 
-        it.skip("Formats the GROQ", () => {
+        it("Formats the GROQ", () => {
           expect(format(input)).toEqual(expected);
         });
       });
