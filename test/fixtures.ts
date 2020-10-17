@@ -173,7 +173,7 @@ export const joins = [
     *[_type == "movie"] {
       title,
       poster {
-        asset->{ path, url } 
+        asset->{ path, url }
       }
     }`,
   groq`
@@ -186,7 +186,7 @@ export const joins = [
     *[_type == "person"] {
       name,
       "relatedMovies": *[_type == "movie" && references(^._id)] {
-        title 
+        title
       }
     }
   `,
@@ -206,7 +206,7 @@ export const objectProjections = [
     *[_type == "movie"] { _id, _type, title }
   `,
   groq`
-    *[_type == "movie"] { "renamedId": _id, _type, title}
+    *[_type == "movie"] { "renamedId": _id, _type, title }
   `,
   groq`
     *[_type == "movie"].title
@@ -215,10 +215,9 @@ export const objectProjections = [
     *[_type == "movie"] { "characterNames": castMembers[].characterName }
   `,
   groq`
-    *[_type=="movie" && title == "Arrival"] {
+    *[_type == "movie" && title == "Arrival"] {
       title,
-      "posterUrl": poster.asset->url 
-    }
+      "posterUrl": poster.asset->url    }
   `,
   groq`
     *[_type == "movie"] { ... }
@@ -247,7 +246,7 @@ export const objectProjections = [
     *[_type == "book"] { authors[]->{ name, bio } }
   `,
   groq`
-    { "threeMovieTitles": *[_type=="movie"][0..2].title }
+    { "threeMovieTitles": *[_type == "movie"][0..2].title }
   `,
   groq`
     {
@@ -275,9 +274,9 @@ export const specialVars = [
     }
   `,
   groq`
-    *[_type=="person"] {
+    *[_type == "person"] {
       name,
-      "relatedMovies": *[_type=="movie" && references(^._id)] {
+      "relatedMovies": *[_type == "movie" && references(^._id)] {
         title
       }
     }
@@ -287,61 +286,48 @@ export const specialVars = [
 export const conditionals = [
   groq`
     *[_type == "group_core"] {
-        ...,
-        "popularity": select(
-            popularity > 20 => "high",
-            popularity > 10 => "medium",
-            popularity <= 10 => "low"
-      )
-    }
-  `,
-  groq`
-    *[_type=="movie"] {
       ...,
       "popularity": select(
         popularity > 20 => "high",
         popularity > 10 => "medium",
-        "low",
+        popularity <= 10 => "low"
       )
     }
   `,
   groq`
-    *[_type=="movie"] {
+    *[_type == "movie"] {
+      ...,
+      "popularity": select(
+        popularity > 20 => "high",
+        popularity > 10 => "medium",
+        "low"
+      )
+    }
+  `,
+  groq`
+    *[_type == "movie"] {
       ...,
       releaseDate >= "2018-06-01" => {
         "screenings": *[_type == "screening" && movie._ref == ^._id],
-        "news": *[_type == "news" && movie._ref == ^._id],
+        "news": *[_type == "news" && movie._ref == ^._id]
       },
       popularity > 20 && rating > 7 => {
         "featured": true,
-        "awards": *[_type == "award" && movie._ref == ^._id],
+        "awards": *[_type == "award" && movie._ref == ^._id]
       }
     }
   `,
-  // This is broken as groq-js parses 7.0 into an integer 7.
-  // groq`
-  //   *[_type=="movie"] {
-  //     ...,
-  //     releaseDate >= "2018-06-01" => {
-  //       "screenings": *[_type == "screening" && movie._ref == ^._id],
-  //       "news": *[_type == "news" && movie._ref == ^._id],
-  //     },
-  //     popularity > 20 && rating > 7.0 => {
-  //       "featured": true,
-  //       "awards": *[_type == "award" && movie._ref == ^._id],
-  //     }
-  //   }
-  // `,
+
   groq`
-    *[_type=="movie"] {
+    *[_type == "movie"] {
       ...,
       ...select(releaseDate >= "2018-06-01" => {
         "screenings": *[_type == "screening" && movie._ref == ^._id],
-        "news": *[_type == "news" && movie._ref == ^._id],
+        "news": *[_type == "news" && movie._ref == ^._id]
       }),
       ...select(popularity > 20 && rating > 7 => {
         "featured": true,
-        "awards": *[_type == "award" && movie._ref == ^._id],
+        "awards": *[_type == "award" && movie._ref == ^._id]
       })
     }
   `,
@@ -358,7 +344,7 @@ export const conditionals = [
 
 export const functions = [
   groq`
-    *[references("person_sigourney-weaver")] {title}
+    *[references("person_sigourney-weaver")] { title }
   `,
   groq`
     *[_type == "movie" && references(*[_type == "person" && age > 99]._id)]{ title }
@@ -372,8 +358,8 @@ export const functions = [
   groq`count(*[_type == "movie" && rating == "R"])`,
   groq`
     *[_type == "movie"] {
-      title, 
-      "actorCount": count(actors) 
+      title,
+      "actorCount": count(actors)
     }
   `,
   groq`
@@ -416,6 +402,6 @@ export const arithmeticAndConcatenation = [
     [1, 2] + [3, 4]
   `,
   groq`
-    { "a": 1,"b": 2 } + { "c": 3 }
+    { "a": 1, "b": 2 } + { "c": 3 }
   `,
 ];
